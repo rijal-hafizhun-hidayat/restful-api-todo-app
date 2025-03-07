@@ -103,14 +103,14 @@ class TodoController extends Controller
                 default:
                     return response()->json([
                         'message' => "invalid type value",
-                        'errors' => "invalida type value"
+                        'errors' => "please check the type value and try again"
                     ], 404);
                     break;
             }
         } else {
             return response()->json([
                 'message' => 'wrong params name',
-                'errors' => "wrong params name"
+                'errors' => "please check the parameter name and try again"
             ], 400);
         }
     }

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TodosExport;
 use App\Http\Requests\TodoRequest;
 use App\Models\Todo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TodoController extends Controller
 {
@@ -74,10 +76,10 @@ class TodoController extends Controller
             $queryTodo->whereIn('priority', $priorities);
         }
 
-        $dataTodo = $queryTodo->get();
-        $countTodo = $queryTodo->count();
-        $sumTimeTrackedTodo = $queryTodo->sum('time_tracked');
+        $dataTodos = $queryTodo->get();
+        $countTodos = $queryTodo->count();
+        $sumTimeTrackedTodos = $queryTodo->sum('time_tracked');
 
-        dd($dataTodo, $countTodo, $sumTimeTrackedTodo);
+        return Excel::download(new TodosExport($dataTodos, $sumTimeTrackedTodos, $countTodos), 'todos.xlsx');
     }
 }

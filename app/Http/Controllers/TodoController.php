@@ -82,4 +82,86 @@ class TodoController extends Controller
 
         return Excel::download(new TodosExport($dataTodos, $sumTimeTrackedTodos, $countTodos), 'todos.xlsx');
     }
+
+    public function chartTodo(Request $request)
+    {
+        if ($request->filled('type')) {
+            $type = $request->query('type');
+
+            switch ($type) {
+                case 'status':
+                    return $this->chartTodoByTypeStatus();
+                    break;
+
+                case 'priority':
+                    return $this->chartTodoByTypePriority();
+                    break;
+
+                case 'assignee':
+                    return $this->chartTodoByTypeAssignee();
+                    break;
+                default:
+                    return response()->json([
+                        'message' => "invalid type value",
+                        'errors' => "invalida type value"
+                    ], 404);
+                    break;
+            }
+        } else {
+            return response()->json([
+                'message' => 'wrong params name',
+                'errors' => "wrong params name"
+            ], 400);
+        }
+    }
+
+    public function chartTodoByTypeStatus()
+    {
+        $todo = Todo::query();
+        $sumPending = $todo->where('status', 'pending')->count();
+        $sumOpen = $todo->where('status', 'open')->count();
+        $sumInProgress = $todo->where('status', 'in_progress')->count();
+        $sumCompleted = $todo->where('status', 'completed')->count();
+
+        return response()->json([
+            "status_summary" => [
+                "pending" => $sumPending,
+                'open' => $sumOpen,
+                'in_progress' => $sumInProgress,
+                'completed' => $sumCompleted
+            ]
+        ], 200);
+    }
+
+    public function chartTodoByTypePriority()
+    {
+        $todo = Todo::query();
+        $sumLow = $todo->where('priority', 'low')->count();
+        $sumMedium = $todo->where('priority', 'medium')->count();
+        $sumHigh = $todo->where('priority', 'high')->count();
+
+        return response()->json([
+            "priority_summary" => [
+                "low" => $sumLow,
+                'medium' => $sumMedium,
+                'high' => $sumHigh,
+            ]
+        ], 200);
+    }
+
+    public function chartTodoByTypeAssignee()
+    {
+        $todos = Todo::all();
+
+        $summary = $todos->groupBy('assignee')->map(function ($items, $assignee) {
+            return [
+                'assignee' => $assignee != '' ? $assignee : 'Unassigned',
+                'total_todos' => $items->count(),
+                'total_time_tracked' => $items->sum('time_tracked'),
+                'total_pending_todos' => $items->where('status', 'pending')->count(),
+            ];
+        })->values();
+
+        return response()->json(["assignee_summary" => $summary], 200);
+    }
 }
